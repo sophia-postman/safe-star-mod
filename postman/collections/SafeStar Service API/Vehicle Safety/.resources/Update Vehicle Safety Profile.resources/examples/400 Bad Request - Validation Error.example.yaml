@@ -3,10 +3,16 @@ request:
   url: "{{baseUrl}}/vehicle/:id"
   method: PATCH
   headers:
-    Accept: application/json
     Content-Type: application/json
+    Accept: application/json
   pathVariables:
     id: "1002"
+  body:
+    type: json
+    content: |-
+      {
+        "newCode": false
+      }
 response:
   statusCode: 400
   statusText: Bad Request
@@ -26,6 +32,42 @@ response:
                 "issue": "value must be an enum: [OK, LOW, ERR]"
               }
             ]
+          }
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "issue": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

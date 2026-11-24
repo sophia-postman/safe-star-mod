@@ -2,6 +2,8 @@ $kind: http-example
 request:
   url: "{{baseUrl}}/run/:id"
   method: GET
+  headers:
+    Accept: application/json
   pathVariables:
     id: "1"
 response:
@@ -13,7 +15,19 @@ response:
     type: json
     content: |-
       {
-          "run": "1",
-          "status": "COMPLETE"
+        "run": "1",
+        "status": "COMPLETE"
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "run": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
       }
 order: 1000

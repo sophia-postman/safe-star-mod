@@ -4,6 +4,19 @@ method: PUT
 headers:
   Accept: application/json
 pathVariables:
-  id: "1001"
+  - key: id
+    value: "1001"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 examples: ./.resources/Update Driver Safety Profile.resources/examples
-order: 3000
+order: 2000

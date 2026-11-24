@@ -4,6 +4,19 @@ method: GET
 headers:
   Accept: application/json
 pathVariables:
-  id: "1"
+  - key: id
+    value: "1"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 examples: ./.resources/Retrieve diagnostic report.resources/examples
 order: 2000

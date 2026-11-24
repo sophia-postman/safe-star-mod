@@ -4,6 +4,19 @@ method: DELETE
 headers:
   Accept: application/json
 pathVariables:
-  id: "1001"
+  - key: id
+    value: "1001"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 examples: ./.resources/Delete Driver Safety Profile.resources/examples
-order: 4000
+order: 3000

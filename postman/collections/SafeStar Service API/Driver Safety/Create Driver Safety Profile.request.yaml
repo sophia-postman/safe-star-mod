@@ -6,9 +6,26 @@ headers:
   Content-Type: application/json
   Accept: application/json
 pathVariables:
-  id: "1001"
+  - key: id
+    value: "1001"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 body:
   type: json
   content: "{}"
+  $type: |-
+    {
+      "type": "object"
+    }
 examples: ./.resources/Create Driver Safety Profile.resources/examples
 order: 1000

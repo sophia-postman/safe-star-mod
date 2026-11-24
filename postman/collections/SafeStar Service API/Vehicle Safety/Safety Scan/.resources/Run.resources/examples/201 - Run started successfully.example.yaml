@@ -24,4 +24,16 @@ response:
         "run": "1",
         "status": "QUEUED"
       }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "run": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
 order: 1000

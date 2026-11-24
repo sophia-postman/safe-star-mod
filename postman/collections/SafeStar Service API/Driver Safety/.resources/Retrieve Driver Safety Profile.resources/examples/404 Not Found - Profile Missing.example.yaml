@@ -5,7 +5,7 @@ request:
   headers:
     Accept: application/json
   pathVariables:
-    id: "0000"
+    id: "1001"
 response:
   statusCode: 404
   statusText: Not Found
@@ -20,6 +20,31 @@ response:
           "message": "No safety profile found for the specified driver.",
           "details": {
             "driverId": "0000"
+          }
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "driverId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

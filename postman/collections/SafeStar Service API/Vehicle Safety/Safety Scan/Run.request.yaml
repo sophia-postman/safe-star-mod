@@ -11,5 +11,17 @@ body:
       "vehicle": "1002",
       "driver": "1001"
     }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "vehicle": {
+          "type": "string"
+        },
+        "driver": {
+          "type": "string"
+        }
+      }
+    }
 examples: ./.resources/Run.resources/examples
 order: 1000

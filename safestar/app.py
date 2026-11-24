@@ -156,6 +156,19 @@ def delete_driver_profile(driver_id: str):
     del _driver_profiles[driver_id]
     return "", 204
 
+@app.route("/driver/<driver_id>", methods=["GET"])
+def get_driver_profile(driver_id: str):
+    profile = _driver_profiles.get(driver_id)
+    if profile is None:
+        return _error(
+            "PROFILE_NOT_FOUND",
+            "No safety profile found for the specified driver.",
+            {"driverId": driver_id},
+            404,
+        )
+    return jsonify(profile), 200
+
+
 
 # ---------------------------------------------------------------------------
 # Vehicle Safety
