@@ -3,9 +3,16 @@ request:
   url: "{{baseUrl}}/vehicle/:id"
   method: PATCH
   headers:
+    Content-Type: application/json
     Accept: application/json
   pathVariables:
     id: "1002"
+  body:
+    type: json
+    content: |-
+      {
+        "newCode": false
+      }
 response:
   statusCode: 500
   statusText: Internal Server Error
@@ -19,6 +26,26 @@ response:
           "code": "UNEXPECTED_ERROR",
           "message": "An unexpected error occurred.",
           "details": {}
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
+            }
+          }
         }
       }
 order: 3000

@@ -13,7 +13,7 @@ response:
     Content-Type: application/json
   body:
     type: json
-    content: >-
+    content: |-
       {
         "id": "{{$pathSegments '1'}}",
         "status": "success",
@@ -108,6 +108,209 @@ response:
             "majorIssues": 3,
             "moderateIssues": 1,
             "notes": "Vehicle passed physical safety component checks but failed due to active engine diagnostic trouble codes."
+          }
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "report": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string"
+              },
+              "job": {
+                "type": "object",
+                "properties": {
+                  "jobId": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "completed": {
+                    "type": "boolean"
+                  },
+                  "durationMs": {
+                    "type": "integer"
+                  },
+                  "apiVersion": {
+                    "type": "string"
+                  }
+                }
+              },
+              "vehicle": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "vin": {
+                    "type": "string"
+                  },
+                  "make": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "year": {
+                    "type": "integer"
+                  },
+                  "mileage": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "checks": {
+                "type": "object",
+                "properties": {
+                  "tpms": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "tailLights": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oilPressure": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "sensors": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "defrost": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "airbags": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "battery": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "voltage": {
+                        "type": "number"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "diagnostics": {
+                "type": "object",
+                "properties": {
+                  "newCodeDetected": {
+                    "type": "boolean"
+                  },
+                  "activeCodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "severity": {
+                          "type": "string"
+                        },
+                        "recommendedAction": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "failureReason": {
+                    "type": "string"
+                  }
+                }
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "overallSafetyStatus": {
+                    "type": "string"
+                  },
+                  "criticalIssues": {
+                    "type": "integer"
+                  },
+                  "majorIssues": {
+                    "type": "integer"
+                  },
+                  "moderateIssues": {
+                    "type": "integer"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

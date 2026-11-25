@@ -18,4 +18,16 @@ response:
         "status": "queued",
         "id": "1"
       }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      }
 order: 1000

@@ -5,7 +5,20 @@ headers:
   Content-Type: application/json
   Accept: application/json
 pathVariables:
-  id: "1002"
+  - key: id
+    value: "1002"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 body:
   type: json
   content: |-
@@ -26,6 +39,45 @@ body:
         "P0171",
         "P0128"
       ]
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "vin": {
+          "type": "string"
+        },
+        "tpms": {
+          "type": "string"
+        },
+        "tailLights": {
+          "type": "string"
+        },
+        "oilPressure": {
+          "type": "string"
+        },
+        "sensors": {
+          "type": "string"
+        },
+        "defrost": {
+          "type": "string"
+        },
+        "airbags": {
+          "type": "string"
+        },
+        "battery": {
+          "type": "string"
+        },
+        "newCode": {
+          "type": "boolean"
+        },
+        "activeCodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
 examples: ./.resources/Create Vehicle Safety Profile.resources/examples
 order: 2000

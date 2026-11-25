@@ -9,28 +9,7 @@ request:
     id: "1001"
   body:
     type: json
-    content: |-
-      {
-        "driver": {
-          "firstName": "Alex",
-          "lastName": "Johnson",
-          "license": {
-            "issueDate": "2022-05-14",
-            "expiry": "2026-05-14",
-            "issuingState": "CA",
-            "restrictions": [
-              "B"
-            ]
-          },
-          "email": "alex.johnson@example.com"
-        },
-        "safetyScore": 100,
-        "hardStops": 0,
-        "speeding": 0,
-        "nightDrives": 0,
-        "weather": 0,
-        "ignoredWarnings": 0
-      }
+    content: "{}"
 response:
   statusCode: 201
   statusText: Created
@@ -60,5 +39,69 @@ response:
         "nightDrives": 0,
         "weather": 0,
         "ignoredWarnings": 0
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string"
+          },
+          "driver": {
+            "type": "object",
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "license": {
+                "type": "object",
+                "properties": {
+                  "issueDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "expiry": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "issuingState": {
+                    "type": "string"
+                  },
+                  "restrictions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          },
+          "safetyScore": {
+            "type": "integer"
+          },
+          "hardStops": {
+            "type": "integer"
+          },
+          "speeding": {
+            "type": "integer"
+          },
+          "nightDrives": {
+            "type": "integer"
+          },
+          "weather": {
+            "type": "integer"
+          },
+          "ignoredWarnings": {
+            "type": "integer"
+          }
+        }
       }
 order: 1000

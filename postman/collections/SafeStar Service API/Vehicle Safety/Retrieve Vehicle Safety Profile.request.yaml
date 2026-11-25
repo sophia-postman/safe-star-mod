@@ -4,6 +4,19 @@ method: GET
 headers:
   Accept: application/json
 pathVariables:
-  id: "1002"
+  - key: id
+    value: "1002"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 examples: ./.resources/Retrieve Vehicle Safety Profile.resources/examples
 order: 3000

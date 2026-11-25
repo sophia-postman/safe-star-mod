@@ -3,14 +3,37 @@ name: Update Vehicle Safety Profile
 url: "{{baseUrl}}/vehicle/:id"
 method: PATCH
 headers:
+  Content-Type: application/json
   Accept: application/json
 pathVariables:
-  id: "1002"
+  - key: id
+    value: "1002"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 body:
   type: json
   content: |-
     {
-        "newCode": false
+      "newCode": false
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "newCode": {
+          "type": "boolean"
+        }
+      }
     }
 examples: ./.resources/Update Vehicle Safety Profile.resources/examples
 order: 4000

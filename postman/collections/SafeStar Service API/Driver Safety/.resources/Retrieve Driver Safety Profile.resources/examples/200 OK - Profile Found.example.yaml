@@ -2,15 +2,32 @@ $kind: http-example
 request:
   url: "{{baseUrl}}/driver/:id"
   method: GET
-  headers:
-    Accept: application/json
   pathVariables:
     id: "1001"
 response:
   statusCode: 200
   statusText: OK
   headers:
-    Content-Type: application/json
+    - key: Content-Type
+      value: application/json
+      description: ""
+      $type: |-
+        {
+          "type": "",
+          "format": "",
+          "required": false,
+          "deprecated": false,
+          "default": "",
+          "enum": [],
+          "pattern": "",
+          "minLength": "",
+          "maxLength": "",
+          "minItems": "",
+          "maxItems": "",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false
+        }
   body:
     type: json
     content: |-

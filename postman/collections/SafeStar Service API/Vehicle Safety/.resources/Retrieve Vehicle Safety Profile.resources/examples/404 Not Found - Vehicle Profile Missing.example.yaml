@@ -2,13 +2,15 @@ $kind: http-example
 request:
   url: "{{baseUrl}}/vehicle/:id"
   method: GET
+  headers:
+    Accept: application/json
   pathVariables:
-    - key: id
-      value: "1002"
-      description: Vehicle UUID
+    id: "1002"
 response:
   statusCode: 404
   statusText: Not Found
+  headers:
+    Content-Type: application/json
   body:
     type: json
     content: |-
@@ -18,6 +20,31 @@ response:
           "message": "No safety profile found for the specified vehicle.",
           "details": {
             "vehicleId": "1002"
+          }
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "vehicleId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

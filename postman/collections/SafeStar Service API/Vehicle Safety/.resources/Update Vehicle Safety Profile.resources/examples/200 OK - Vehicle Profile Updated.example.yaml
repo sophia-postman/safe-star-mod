@@ -3,15 +3,15 @@ request:
   url: "{{baseUrl}}/vehicle/:id"
   method: PATCH
   headers:
-    Accept: application/json
     Content-Type: application/json
+    Accept: application/json
   pathVariables:
     id: "1002"
   body:
     type: json
     content: |-
       {
-          "newCode": false
+        "newCode": false
       }
 response:
   statusCode: 200
@@ -38,5 +38,44 @@ response:
           "P0171",
           "P0128"
         ]
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "vin": {
+            "type": "string"
+          },
+          "tpms": {
+            "type": "string"
+          },
+          "tailLights": {
+            "type": "string"
+          },
+          "oilPressure": {
+            "type": "string"
+          },
+          "sensors": {
+            "type": "string"
+          },
+          "defrost": {
+            "type": "string"
+          },
+          "airbags": {
+            "type": "string"
+          },
+          "battery": {
+            "type": "string"
+          },
+          "newCode": {
+            "type": "boolean"
+          },
+          "activeCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
 order: 1000

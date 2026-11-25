@@ -23,4 +23,29 @@ response:
           }
         }
       }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "vehicleId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
 order: 1000

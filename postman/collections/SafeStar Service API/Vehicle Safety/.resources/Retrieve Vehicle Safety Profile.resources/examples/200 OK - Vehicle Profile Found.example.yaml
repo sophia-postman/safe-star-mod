@@ -39,4 +39,63 @@ response:
           "P0128"
         ]
       }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "vehicle": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "vin": {
+                "type": "string"
+              },
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "year": {
+                "type": "integer"
+              },
+              "mileage": {
+                "type": "integer"
+              }
+            }
+          },
+          "tpms": {
+            "type": "string"
+          },
+          "tailLights": {
+            "type": "string"
+          },
+          "oilPressure": {
+            "type": "string"
+          },
+          "sensors": {
+            "type": "string"
+          },
+          "defrost": {
+            "type": "string"
+          },
+          "airbags": {
+            "type": "string"
+          },
+          "battery": {
+            "type": "string"
+          },
+          "newCode": {
+            "type": "boolean"
+          },
+          "activeCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
 order: 1000

@@ -53,4 +53,56 @@ response:
           "speedingEvents": 0
         }
       }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "vehicleId": {
+            "type": "string"
+          },
+          "profileId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "riskScore": {
+            "type": "integer"
+          },
+          "vin": {
+            "type": "string"
+          },
+          "make": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "hardCorneringEvents": {
+                "type": "integer"
+              },
+              "hardBrakingEvents": {
+                "type": "integer"
+              },
+              "speedingEvents": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
 order: 1000

@@ -4,6 +4,19 @@ method: POST
 headers:
   Accept: application/json
 pathVariables:
-  vehicleId: "1002"
+  - key: vehicleId
+    value: "1002"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
 examples: ./.resources/Run diagnostic and generate report.resources/examples
 order: 1000
