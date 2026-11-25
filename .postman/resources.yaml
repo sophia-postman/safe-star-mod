@@ -13,3 +13,12 @@ cloudResources:
     ../postman/environments/Test.environment.yaml: 60381465-25b6f298-96f6-4ef5-a998-c3aaa9d23e14
   globals:
     ../postman/globals/workspace.globals.yaml: 5b31d37d-937c-4738-8380-676fc7caeaaa
+  specs:
+    ../postman/specs/Spec de Servicio SafeStar/index.yaml: f970a2e7-2a54-4d56-ad14-4694011626ed
+resourceNameMappings:
+  specs:
+    - ../postman/specs/Spec de Servicio SafeStar/index.yaml: Spec de Servicio SafeStar
+
+localResources:
+  specs:
+    - ../postman/specs/Spec de Servicio SafeStar/index.yaml

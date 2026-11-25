@@ -1,5 +1,4 @@
 $kind: http-request
-name: Create Driver Safety Profile
 url: "{{baseUrl}}/driver/:id"
 method: POST
 headers:
@@ -22,10 +21,38 @@ pathVariables:
       }
 body:
   type: json
-  content: "{}"
+  content: |-
+    {
+      "driver": {
+        "firstName": "Alex",
+        "lastName": "Johnson",
+        "license": {
+          "issueDate": "2022-05-14",
+          "expiry": "2026-05-14",
+          "issuingState": "CA",
+          "restrictions": [
+            "B"
+          ]
+        },
+        "email": "alex.johnson1@example.com"
+      },
+      "safetyScore": 100,
+      "hardStops": 0,
+      "speeding": 0,
+      "nightDrives": 0,
+      "weather": 0,
+      "ignoredWarnings": 0
+    }
   $type: |-
     {
       "type": "object"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+    language: text/javascript
 examples: ./.resources/Create Driver Safety Profile.resources/examples
 order: 1000

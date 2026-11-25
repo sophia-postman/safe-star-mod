@@ -1,0 +1,1574 @@
+openapi: 3.0.0
+info:
+  title: SafeStar Service API
+  version: 1.0.0
+  description: >-
+    ## Overview
+
+
+    The **SafeStar Service API** is a microservice owned by the **Platform
+    Engineering team at PostVehicle Enterprises**. It is responsible for
+    tracking driver and vehicle safety metrics and generating personalized
+    **Driver Messages** — customized feedback that helps drivers understand
+    their safety performance and how to improve.
+
+
+    SafeStar operates as a dedicated safety layer within PostVehicle's
+    microservices architecture. Driver and Vehicle entity management are handled
+    by separate upstream services (the **Driver Service** and **Vehicle
+    Service** respectively), while SafeStar focuses exclusively on safety
+    profiling, scanning, reporting, and display.
+
+
+    ### Key Capabilities
+
+
+    - **Driver Safety Profiles** — Create, retrieve, update, and delete safety
+    profiles linked to drivers managed in the Driver Service.
+
+    - **Vehicle Safety Profiles** — Create, retrieve, update, and delete safety
+    profiles linked to vehicles managed in the Vehicle Service, including OBD-II
+    diagnostic codes and sensor status.
+
+    - **Safety Scans** — Trigger asynchronous safety scan runs that evaluate a
+    driver-vehicle pairing, check run status, and cancel in-progress runs.
+
+    - **Diagnostic Reporting** — Generate, retrieve, and send diagnostic reports
+    for a vehicle.
+
+    - **Driver Message Display** — Retrieve a customized safety message for a
+    driver-vehicle pair once safety checks are complete.
+
+
+    ---
+
+
+    ## Getting Started
+
+
+    ### Prerequisites
+
+
+    Before using the SafeStar Service API, ensure you have:
+
+
+    1. A **Driver ID** from the Driver Service for the driver you want to work
+    with.
+
+    2. A **Vehicle ID** from the Vehicle Service for the vehicle you want to
+    work with.
+
+    3. A valid **API key** to authenticate requests.
+
+
+    ### Authentication
+
+
+    All requests are authenticated using an **API key** passed as the
+    `X-API-Key` request header. The collection is pre-configured to read this
+    from the `vault:apiKey` vault variable.
+
+
+    Set your API key in the Postman Vault:
+
+    - Open the **Vault** panel in Postman and add a secret named `apiKey` with
+    your API key value.
+
+
+    ### Environments
+
+
+    The collection uses a `{{baseUrl}}` environment variable for the base URL.
+    Three environments are available:
+
+
+    | Environment | Description |
+
+    |---|---|
+
+    | **Local** | Points to the Postman mock server for local development and
+    testing |
+
+    | **Test** | For integration testing against the test environment |
+
+    | **Prod** | For production use |
+
+
+    Select the appropriate environment from the environment selector before
+    sending requests.
+
+
+    ### Typical Workflow
+
+
+    Follow these steps to get a customized Driver Message for a driver-vehicle
+    pair:
+
+
+    **1. Create a Driver Safety Profile**
+
+    `POST {{baseUrl}}/driver/:id`
+
+    Register a safety profile for a driver using their Driver Service ID.
+
+
+    **2. Create a Vehicle Safety Profile**
+
+    `POST {{baseUrl}}/vehicle/:id`
+
+    Register a safety profile for a vehicle using their Vehicle Service ID.
+    Include vehicle sensor statuses (TPMS, airbags, battery, etc.) and any
+    active OBD-II diagnostic codes.
+
+
+    **3. Run a Safety Scan**
+
+    `POST {{baseUrl}}/run`
+
+    Trigger an asynchronous safety scan for the driver-vehicle pair. Returns a
+    run ID.
+
+
+    **4. Check Run Status**
+
+    `GET {{baseUrl}}/run/:id`
+
+    Poll the status of the safety scan using the run ID returned in step 3. Wait
+    until the scan is complete before proceeding.
+
+
+    **5. Get the Driver Message Display**
+
+    `GET {{baseUrl}}/display`
+
+    Once safety checks are complete, retrieve the personalized Driver Message
+    for the driver-vehicle pair.
+
+
+    **6. Generate a Diagnostic Report** *(optional)*
+
+    `POST {{baseUrl}}/diagnostics/generate/:vehicleId`
+
+    Generate a full diagnostic report for the vehicle.
+
+
+    **7. Retrieve & Send the Report** *(optional)*
+
+    Use `GET {{baseUrl}}/diagnostics/:id` to retrieve the report and `POST
+    {{baseUrl}}/diagnostics/send/:id` to send it.
+
+
+    ---
+servers:
+  - url: '{{baseUrl}}'
+paths:
+  /driver/{id}:
+    get:
+      summary: Retrieve Driver Safety Profile
+      responses:
+        '200':
+          description: 200 OK - Profile Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profileId:
+                    type: string
+                    format: utc-millisec
+                  driver:
+                    type: object
+                    properties:
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      license:
+                        type: object
+                        properties:
+                          issueDate:
+                            type: string
+                            format: date
+                          expiry:
+                            type: string
+                            format: date
+                          issuingState:
+                            type: string
+                          restrictions:
+                            type: array
+                            items:
+                              type: string
+                      email:
+                        type: string
+                        format: email
+                  safetyScore:
+                    type: integer
+                  hardStops:
+                    type: integer
+                  speeding:
+                    type: integer
+                  nightDrives:
+                    type: integer
+                  weather:
+                    type: integer
+                  ignoredWarnings:
+                    type: integer
+        '404':
+          description: 404 Not Found - Profile Missing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          driverId:
+                            type: string
+              example:
+                error:
+                  code: PROFILE_NOT_FOUND
+                  message: No safety profile found for the specified driver.
+                  details:
+                    driverId: '0000'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Driver Safety
+    post:
+      summary: Create Driver Safety Profile
+      responses:
+        '201':
+          description: 201 Created - Profile Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profileId:
+                    type: string
+                  driver:
+                    type: object
+                    properties:
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      license:
+                        type: object
+                        properties:
+                          issueDate:
+                            type: string
+                            format: date
+                          expiry:
+                            type: string
+                            format: date
+                          issuingState:
+                            type: string
+                          restrictions:
+                            type: array
+                            items:
+                              type: string
+                      email:
+                        type: string
+                        format: email
+                  safetyScore:
+                    type: integer
+                  hardStops:
+                    type: integer
+                  speeding:
+                    type: integer
+                  nightDrives:
+                    type: integer
+                  weather:
+                    type: integer
+                  ignoredWarnings:
+                    type: integer
+              example:
+                profileId: '1'
+                driver:
+                  firstName: Alex
+                  lastName: Johnson
+                  license:
+                    issueDate: '2022-05-14'
+                    expiry: '2026-05-14'
+                    issuingState: CA
+                    restrictions:
+                      - B
+                  email: alex.johnson@example.com
+                safetyScore: 100
+                hardStops: 0
+                speeding: 0
+                nightDrives: 0
+                weather: 0
+                ignoredWarnings: 0
+        '409':
+          description: 409 Conflict - Profile Already Exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          driverId:
+                            type: integer
+                          existingProfileId:
+                            type: string
+              example:
+                error:
+                  code: PROFILE_ALREADY_EXISTS
+                  message: A safety profile already exists for this driver.
+                  details:
+                    driverId: 1002
+                    existingProfileId: '2'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Driver Safety
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1001
+    put:
+      summary: Update Driver Safety Profile
+      responses:
+        '200':
+          description: 200 OK - Profile Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profileId:
+                    type: string
+                  driver:
+                    type: object
+                    properties:
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      license:
+                        type: object
+                        properties:
+                          issueDate:
+                            type: string
+                            format: date
+                          expiry:
+                            type: string
+                            format: date
+                          issuingState:
+                            type: string
+                          restrictions:
+                            type: array
+                            items:
+                              type: string
+                      email:
+                        type: string
+                        format: email
+                  safetyScore:
+                    type: integer
+                  hardStops:
+                    type: integer
+                  speeding:
+                    type: integer
+                  nightDrives:
+                    type: integer
+                  weather:
+                    type: integer
+                  ignoredWarnings:
+                    type: integer
+              example:
+                profileId: '1'
+                driver:
+                  firstName: Alex
+                  lastName: Johnson
+                  license:
+                    issueDate: '2022-05-14'
+                    expiry: '2026-05-14'
+                    issuingState: CA
+                    restrictions:
+                      - B
+                  email: alex.johnson@example.com
+                safetyScore: 95
+                hardStops: 0
+                speeding: 1
+                nightDrives: 0
+                weather: 0
+                ignoredWarnings: 0
+        '400':
+          description: 400 Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          fields:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                issue:
+                                  type: string
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Request body failed validation.
+                  details:
+                    fields:
+                      - field: safetyScore
+                        issue: must be an integer between 0 and 100
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Driver Safety
+    delete:
+      summary: Delete Driver Safety Profile
+      responses:
+        '204':
+          description: 204 No Content - Profile Deleted
+        '404':
+          description: 404 Not Found - Profile Missing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          driverId:
+                            type: string
+              example:
+                error:
+                  code: PROFILE_NOT_FOUND
+                  message: No safety profile found for the specified driver.
+                  details:
+                    driverId: '1001'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Driver Safety
+  /run:
+    post:
+      summary: Run
+      responses:
+        '201':
+          description: 201 - Run started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run:
+                    type: string
+                  status:
+                    type: string
+              example:
+                run: '1'
+                status: QUEUED
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+        - Safety Scan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vehicle:
+                  type: string
+                driver:
+                  type: string
+            example:
+              vehicle: '1002'
+              driver: '1001'
+  /run/{id}:
+    get:
+      summary: Run Status
+      responses:
+        '200':
+          description: 200 - Completed run retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run:
+                    type: string
+                  status:
+                    type: string
+              examples:
+                200 - Completed run retrieved successfully:
+                  value:
+                    run: '1'
+                    status: COMPLETE
+                200 - Completed run retrieved successfully-2:
+                  value:
+                    run: '1'
+                    status: COMPLETE
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+        - Safety Scan
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1
+    delete:
+      summary: Cancel Run
+      responses:
+        '200':
+          description: 204 - Run cancelled successfully
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+        - Safety Scan
+  /vehicle/{id}:
+    post:
+      summary: Create Vehicle Safety Profile
+      responses:
+        '201':
+          description: 201 Created - Vehicle Profile Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicleId:
+                    type: string
+                  profileId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                  status:
+                    type: string
+                  riskScore:
+                    type: integer
+                  vin:
+                    type: string
+                  make:
+                    type: string
+                  model:
+                    type: string
+                  year:
+                    type: integer
+                  metrics:
+                    type: object
+                    properties:
+                      hardCorneringEvents:
+                        type: integer
+                      hardBrakingEvents:
+                        type: integer
+                      speedingEvents:
+                        type: integer
+              example:
+                vehicleId: 2a8d3c55-0f3a-4c31-8a2a-3f2fd3a33d2d
+                profileId: aa7f3f4a-6d6d-4b39-a11a-3cf8c9fe0a5b
+                createdAt: '2026-03-12T10:25:01.000Z'
+                updatedAt: '2026-03-12T10:25:01.000Z'
+                status: ACTIVE
+                riskScore: 12
+                vin: 1HGCM82633A004352
+                make: Toyota
+                model: Camry
+                year: 2021
+                metrics:
+                  hardCorneringEvents: 0
+                  hardBrakingEvents: 0
+                  speedingEvents: 0
+        '400':
+          description: 400 Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          fields:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                issue:
+                                  type: string
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Request body failed validation.
+                  details:
+                    fields:
+                      - field: vin
+                        issue: must be 17 characters
+        '409':
+          description: 409 Conflict - Profile Already Exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          vehicleId:
+                            type: integer
+                          existingProfileId:
+                            type: string
+                          vin:
+                            type: string
+              example:
+                error:
+                  code: PROFILE_ALREADY_EXISTS
+                  message: A safety profile already exists for this vehicle.
+                  details:
+                    vehicleId: 1002
+                    existingProfileId: '2'
+                    vin: 1HGCM82633A004352
+        '500':
+          description: 500 - Unexpected Error
+      tags:
+        - Vehicle Safety
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vin:
+                  type: string
+                tpms:
+                  type: string
+                tailLights:
+                  type: string
+                oilPressure:
+                  type: string
+                sensors:
+                  type: string
+                defrost:
+                  type: string
+                airbags:
+                  type: string
+                battery:
+                  type: string
+                newCode:
+                  type: boolean
+                activeCodes:
+                  type: array
+                  items:
+                    type: string
+            example:
+              vin: 1HGCM82633A004352
+              tpms: OK
+              tailLights: OK
+              oilPressure: OK
+              sensors: OK
+              defrost: OK
+              airbags: OK
+              battery: OK
+              newCode: true
+              activeCodes:
+                - P0300
+                - P0420
+                - P0455
+                - P0171
+                - P0128
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1002
+    get:
+      summary: Retrieve Vehicle Safety Profile
+      responses:
+        '200':
+          description: 200 OK - Vehicle Profile Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicle:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      vin:
+                        type: string
+                      make:
+                        type: string
+                      model:
+                        type: string
+                      year:
+                        type: integer
+                      mileage:
+                        type: integer
+                  tpms:
+                    type: string
+                  tailLights:
+                    type: string
+                  oilPressure:
+                    type: string
+                  sensors:
+                    type: string
+                  defrost:
+                    type: string
+                  airbags:
+                    type: string
+                  battery:
+                    type: string
+                  newCode:
+                    type: boolean
+                  activeCodes:
+                    type: array
+                    items:
+                      type: string
+              example:
+                vehicle:
+                  id: 123
+                  vin: 1HGCM82633A004352
+                  make: Honda
+                  model: Accord
+                  year: 2020
+                  mileage: 45000
+                tpms: OK
+                tailLights: OK
+                oilPressure: OK
+                sensors: OK
+                defrost: OK
+                airbags: OK
+                battery: OK
+                newCode: true
+                activeCodes:
+                  - P0300
+                  - P0420
+                  - P0455
+                  - P0171
+                  - P0128
+        '404':
+          description: 404 Not Found - Vehicle Profile Missing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          vehicleId:
+                            type: string
+              examples:
+                404 Not Found - Vehicle Profile Missing:
+                  value:
+                    error:
+                      code: VEHICLE_PROFILE_NOT_FOUND
+                      message: No safety profile found for the specified vehicle.
+                      details:
+                        vehicleId: '1002'
+                404 Not Found - Vehicle Profile Missing-2:
+                  value:
+                    error:
+                      code: VEHICLE_PROFILE_NOT_FOUND
+                      message: No safety profile found for the specified vehicle.
+                      details:
+                        vehicleId: '1002'
+        '500':
+          description: Retrieve Vehicle Safety Profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+    patch:
+      summary: Update Vehicle Safety Profile
+      responses:
+        '200':
+          description: 200 OK - Vehicle Profile Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vin:
+                    type: string
+                  tpms:
+                    type: string
+                  tailLights:
+                    type: string
+                  oilPressure:
+                    type: string
+                  sensors:
+                    type: string
+                  defrost:
+                    type: string
+                  airbags:
+                    type: string
+                  battery:
+                    type: string
+                  newCode:
+                    type: boolean
+                  activeCodes:
+                    type: array
+                    items:
+                      type: string
+              example:
+                vin: 1HGCM82633A004352
+                tpms: OK
+                tailLights: OK
+                oilPressure: OK
+                sensors: OK
+                defrost: OK
+                airbags: OK
+                battery: OK
+                newCode: false
+                activeCodes:
+                  - P0300
+                  - P0420
+                  - P0455
+                  - P0171
+                  - P0128
+        '400':
+          description: 400 Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          fields:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                issue:
+                                  type: string
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Request body failed validation.
+                  details:
+                    fields:
+                      - field: battery
+                        issue: 'value must be an enum: [OK, LOW, ERR]'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newCode:
+                  type: boolean
+            example:
+              newCode: false
+    delete:
+      summary: Delete Vehicle Safety Profile
+      responses:
+        '204':
+          description: 204 No Content - Vehicle Profile Deleted
+        '404':
+          description: 404 Not Found - Vehicle Profile Missing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+                        properties:
+                          vehicleId:
+                            type: string
+              example:
+                error:
+                  code: VEHICLE_PROFILE_NOT_FOUND
+                  message: No safety profile found for the specified vehicle.
+                  details:
+                    vehicleId: '1002'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Vehicle Safety
+  /display:
+    get:
+      summary: Get message display upon completed safety checks
+      responses:
+        '200':
+          description: 200 - Display custom message after successful run
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  html:
+                    type: string
+              example:
+                message: ' Hey {{driverFirstName}} ! Safety score: 100 - perfect drive vibes 😄 Keep it up: smooth accel/brake + stay alert. New codes found: P0300(misfire), P0420(catalyst), P0455(EVAP leak—check gas cap), P0171(lean), P0128(coolant/thermostat). 📅 Book service soon to avoid mpg drop. 🔧'
+                html: >-
+                  <div>🚗✅ Hey {{driverFirstName}} ""! Safety score:
+                  <b>100</b>—perfect drive vibes 😄 Keep it up: smooth
+                  accel/brake + stay alert. New codes found:
+                  <b>P0300</b>(misfire), <b>P0420</b>(catalyst),
+                  <b>P0455</b>(EVAP leak—check gas cap), <b>P0171</b>(lean),
+                  <b>P0128</b>(coolant/thermostat). 📅 Book service soon to
+                  avoid mpg drop. 🔧</div>
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Display
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driver:
+                  type: string
+                vehicle:
+                  type: string
+            example:
+              driver: '1001'
+              vehicle: '1002'
+  /diagnostics/generate/{vehicleId}:
+    post:
+      summary: Run diagnostic and generate report
+      responses:
+        '201':
+          description: 201 - Diagnostic report generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  id:
+                    type: string
+              example:
+                status: queued
+                id: '1'
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Reporting
+    parameters:
+      - name: vehicleId
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1002
+  /diagnostics/{id}:
+    get:
+      summary: Retrieve diagnostic report
+      responses:
+        '200':
+          description: 200 - Report sucessfully retrieve
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  report:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                      status:
+                        type: string
+                      job:
+                        type: object
+                        properties:
+                          jobId:
+                            type: string
+                          type:
+                            type: string
+                          completed:
+                            type: boolean
+                          durationMs:
+                            type: integer
+                          apiVersion:
+                            type: string
+                      vehicle:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          vin:
+                            type: string
+                          make:
+                            type: string
+                          model:
+                            type: string
+                          year:
+                            type: integer
+                          mileage:
+                            type: integer
+                      checks:
+                        type: object
+                        properties:
+                          tpms:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          tailLights:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          oilPressure:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          sensors:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          defrost:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          airbags:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              severity:
+                                type: string
+                          battery:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                              voltage:
+                                type: number
+                              severity:
+                                type: string
+                      diagnostics:
+                        type: object
+                        properties:
+                          newCodeDetected:
+                            type: boolean
+                          activeCodes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                code:
+                                  type: string
+                                description:
+                                  type: string
+                                severity:
+                                  type: string
+                                recommendedAction:
+                                  type: string
+                          failureReason:
+                            type: string
+                      summary:
+                        type: object
+                        properties:
+                          overallSafetyStatus:
+                            type: string
+                          criticalIssues:
+                            type: integer
+                          majorIssues:
+                            type: integer
+                          moderateIssues:
+                            type: integer
+                          notes:
+                            type: string
+              example:
+                id: '{{$pathSegments ''1''}}'
+                status: success
+                report:
+                  timestamp: '2026-03-13T10:15:00Z'
+                  status: FAILED
+                  job:
+                    jobId: JOB-784512
+                    type: VehicleSafetyScan
+                    completed: true
+                    durationMs: 4823
+                    apiVersion: v2.4.1
+                  vehicle:
+                    id: 1
+                    vin: 1HGCM82633A004352
+                    make: Honda
+                    model: Accord
+                    year: 2020
+                    mileage: 45000
+                  checks:
+                    tpms:
+                      status: OK
+                      severity: NONE
+                    tailLights:
+                      status: OK
+                      severity: NONE
+                    oilPressure:
+                      status: OK
+                      severity: NONE
+                    sensors:
+                      status: OK
+                      severity: NONE
+                    defrost:
+                      status: OK
+                      severity: NONE
+                    airbags:
+                      status: OK
+                      severity: NONE
+                    battery:
+                      status: OK
+                      voltage: 12.6
+                      severity: NONE
+                  diagnostics:
+                    newCodeDetected: true
+                    activeCodes:
+                      - code: P0300
+                        description: Random/Multiple Cylinder Misfire Detected
+                        severity: CRITICAL
+                        recommendedAction: >-
+                          Inspect ignition system, spark plugs, and fuel
+                          injectors immediately.
+                      - code: P0420
+                        description: Catalyst System Efficiency Below Threshold
+                        severity: MAJOR
+                        recommendedAction: Inspect catalytic converter and oxygen sensors.
+                      - code: P0455
+                        description: Evaporative Emission System Leak (Large Leak)
+                        severity: MAJOR
+                        recommendedAction: Check fuel cap, EVAP hoses, and purge valve.
+                      - code: P0171
+                        description: System Too Lean (Bank 1)
+                        severity: MAJOR
+                        recommendedAction: >-
+                          Inspect for vacuum leaks and check fuel delivery
+                          system.
+                      - code: P0128
+                        description: >-
+                          Coolant Thermostat Temperature Below Regulating
+                          Temperature
+                        severity: MODERATE
+                        recommendedAction: Inspect thermostat and coolant temperature sensor.
+                    failureReason: >-
+                      Active diagnostic trouble codes detected during safety
+                      scan.
+                  summary:
+                    overallSafetyStatus: NOT SAFE TO RELEASE
+                    criticalIssues: 1
+                    majorIssues: 3
+                    moderateIssues: 1
+                    notes: >-
+                      Vehicle passed physical safety component checks but failed
+                      due to active engine diagnostic trouble codes.
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Reporting
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1
+  /diagnostics/send/{id}:
+    post:
+      summary: Send diagnostic report
+      responses:
+        '204':
+          description: 204 - Report sent successfully
+        '500':
+          description: 500 - Unexpected Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details:
+                        type: object
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: An unexpected error occurred.
+                  details: {}
+      tags:
+        - Reporting
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1
